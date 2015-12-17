@@ -4,6 +4,7 @@ from urllib import urlencode
 from urlparse import urlunsplit
 import json
 import transaction
+from datetime import datetime
 
 from thinkhazard_common.models import (
     DBSession,
@@ -127,6 +128,7 @@ def harvest_layer(object, dry_run=False):
         bounds[3] < 45)
     '''
 
+    mask = False
     if preprocessed is True:
         hazardlevel = None
         hazard_unit = None
@@ -147,7 +149,12 @@ def harvest_layer(object, dry_run=False):
             else:
                 if hazard_period == return_periods:
                     hazardlevel = HazardLevel.get(level)
-        if hazardlevel is None:
+
+        if ('mask_return_period' in type_settings and
+                hazard_period == type_settings['mask_return_period']):
+            mask = True
+
+        if hazardlevel is None and not mask:
             logger.info('{} - No corresponding hazard_level'.format(title))
             return False
 
@@ -160,8 +167,6 @@ def harvest_layer(object, dry_run=False):
         logger.info('{} - srid is different from "EPSG:4326"'
                     .format(title))
         return False
-
-    from datetime import datetime
 
     data_update_date = object['data_update_date']
     if not data_update_date:
@@ -210,8 +215,10 @@ def harvest_layer(object, dry_run=False):
 
     layer = DBSession.query(Layer) \
         .filter(Layer.hazardset_id == hazardset_id)
-    if not preprocessed:
+    if hazardlevel is not None:
         layer = layer.filter(Layer.hazardlevel_id == hazardlevel.id)
+    if mask:
+        layer = layer.filter(Layer.mask.is_(True))
     layer = layer.first()
 
     if layer is None:
@@ -234,6 +241,7 @@ def harvest_layer(object, dry_run=False):
 
     layer.hazardset = hazardset
     layer.hazardlevel = hazardlevel
+    layer.mask = mask
     layer.return_period = hazard_period
     layer.hazardunit = hazard_unit
     layer.data_lastupdated_date = data_update_date
