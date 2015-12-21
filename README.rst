@@ -30,7 +30,7 @@ Keys in configuration file:
 sqlalchemy.url
 --------------
 
-Database connection parameters, example :
+Database connection parameters, example:
 
 .. code:: yaml
 
@@ -39,34 +39,36 @@ Database connection parameters, example :
 data_path
 ---------
 
-Path to main data folder, example :
+Path to main data folder, example:
 
 .. code:: yaml
 
     data_path: /var/sig
 
+For production, we recommend a dedicated disk partition.
+
 hazard_types
 ------------
 
 Harvesting and processing configuration for each hazard type.
-One entry for each hazard type mnemonic, with subkeys :
+One entry for each hazard type mnemonic, with subkeys:
 
-- ``hazard_type`` : Corresponding hazard_type value in geonode.
+- ``hazard_type``: Corresponding hazard_type value in geonode.
 
-- ``preprocessed`` : Mandatory processing method. Possible values are :
+- ``preprocessed``: Mandatory processing method. Possible values are:
 
-  1) ``True`` : One preprocessed layer with values corresponding directly to
+  1) ``True``: One preprocessed layer with values corresponding directly to
      hazard levels.
 
-     Need a corresponding ``values`` configuration.
+     Needs a corresponding ``values`` configuration.
 
-  2) ``False`` : One layer per hazard level.
+  2) ``False``: One layer per hazard level.
 
-     Need corresponding ``return_periods`` and ``thresholds`` configurations.
+     Needs corresponding ``return_periods`` and ``thresholds`` configurations.
 
-  3) ``None`` : Do not process.
+  3) ``None``: Do not process.
 
-- ``return_periods`` : One entry for each hazard level mnemonic with
+- ``return_periods``: One entry per hazard level mnemonic with
   corresponding return periods. Each return period can be a value or a list
   with minimum and maximum values, example:
 
@@ -77,19 +79,19 @@ One entry for each hazard type mnemonic, with subkeys :
         MED: 50
         LOW: [100, 1000]
 
-- ``thresholds`` : Flexible threshold configuration.
+- ``thresholds``: Flexible threshold configuration.
 
-  This can be a simple and global value for hazardtype. Example:
+  This can be a simple and global value per hazardtype. Example:
 
   .. code:: yaml
 
        thresholds: 1700
 
-  But it can also contains one or many sublevels for complex configurations :
+  But it can also contain one or many sublevels for complex configurations:
 
   1) ``global`` and ``local`` entries for corresponding hazardsets.
-  2) One entry for each hazard level mnemonic.
-  3) One entry for each hazard unit from geonode.
+  2) One entry per hazard level mnemonic.
+  3) One entry per hazard unit from geonode.
 
   Example:
 
@@ -110,7 +112,7 @@ One entry for each hazard type mnemonic, with subkeys :
            unit1: value1
            unit2: value2
 
-- ``values`` : One entry for each hazard level,
+- ``values``: One entry per hazard level,
   with list of corresponding values in preprocessed layer.
   Example:
 
@@ -137,7 +139,7 @@ For example, you can define a specific database connection with a
 Processing tasks
 ================
 
-Thinkhazard_processing provide some consecutive tasks to produce data for the
+Thinkhazard_processing provides several consecutive tasks to populate the
 thinkhazard datamart database. These are:
 
 ``.build/venv/bin/process [--hazarset_id ...] [--force] [--dry-run]``
@@ -146,8 +148,8 @@ Calculate output from hazardsets and administrative divisions.
 
 ``.build/venv/bin/decision_tree [--force] [--dry-run]``
 
-Apply decision tree on process outputs to get final relations between
-administrative divisions and hazard categories.
+Apply the decision tree followed by upscaling on process outputs to get the final
+relations between administrative divisions and hazard categories.
 
 Run tests
 =========

@@ -57,7 +57,7 @@ def process(hazardset_id=None, force=False, dry_run=False):
     if not force:
         ids = ids.filter(HazardSet.processed.is_(False))
     if ids.count() == 0:
-        logger.info('No hazardsets to process')
+        logger.info('No hazardset to process')
         return
     for id in ids:
         logger.info(id[0])
@@ -77,7 +77,7 @@ def process(hazardset_id=None, force=False, dry_run=False):
 def process_hazardset(hazardset_id, force=False):
     hazardset = DBSession.query(HazardSet).get(hazardset_id)
     if hazardset is None:
-        raise ProcessException('HazardSet {} does not exist.'
+        raise ProcessException('Hazardset {} does not exist.'
                                .format(hazardset_id))
 
     chrono = datetime.datetime.now()
@@ -86,7 +86,7 @@ def process_hazardset(hazardset_id, force=False):
         if force:
             hazardset.processed = False
         else:
-            raise ProcessException('HazardSet {} has already been processed.'
+            raise ProcessException('Hazardset {} has already been processed.'
                                    .format(hazardset.id))
 
     logger.info("  Cleaning previous outputs")
@@ -99,7 +99,7 @@ def process_hazardset(hazardset_id, force=False):
 
     with rasterio.drivers():
         try:
-            logger.info("  Openning raster files")
+            logger.info("  Opening raster files")
             # Open rasters
             layers = {}
             readers = {}
@@ -178,7 +178,6 @@ def create_outputs(hazardset, layers, readers):
     total = admindivs.count()
     logger.info('  Iterating over {} administrative divisions'.format(total))
     for admindiv in admindivs:
-        # print ' ', admindiv.id, admindiv.code, admindiv.name
 
         current += 1
         if admindiv.geom is None:
@@ -205,7 +204,7 @@ def create_outputs(hazardset, layers, readers):
                                                           reprojected)
 
         except Exception as e:
-            e.message = ("{}-{} raise an exception :\n{}"
+            e.message = ("{}-{} raises an exception :\n{}"
                          .format(admindiv.code, admindiv.name, e.message))
             raise
 
