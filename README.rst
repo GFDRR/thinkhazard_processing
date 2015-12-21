@@ -51,22 +51,11 @@ hazard_types
 ------------
 
 Harvesting and processing configuration for each hazard type.
-One entry for each hazard type mnemonic, with subkeys:
+One entry for each hazard type mnemonic.
+
+Possible subkeys include the following:
 
 - ``hazard_type``: Corresponding hazard_type value in geonode.
-
-- ``preprocessed``: Mandatory processing method. Possible values are:
-
-  1) ``True``: One preprocessed layer with values corresponding directly to
-     hazard levels.
-
-     Needs a corresponding ``values`` configuration.
-
-  2) ``False``: One layer per hazard level.
-
-     Needs corresponding ``return_periods`` and ``thresholds`` configurations.
-
-  3) ``None``: Do not process.
 
 - ``return_periods``: One entry per hazard level mnemonic with
   corresponding return periods. Each return period can be a value or a list
@@ -114,6 +103,8 @@ One entry for each hazard type mnemonic, with subkeys:
 
 - ``values``: One entry per hazard level,
   with list of corresponding values in preprocessed layer.
+  If present, the layer is considered as preprocessed, and the above
+  ``thresholds`` and ``return_periods`` are not taken into account.
   Example:
 
   .. code:: yaml

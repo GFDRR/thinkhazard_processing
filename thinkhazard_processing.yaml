@@ -4,7 +4,6 @@ data_path: /var/sig
 hazard_types:
   FL:
     hazard_type: river_flood
-    preprocessed: False
     return_periods:
       HIG: [10, 25]
       MED: 50
@@ -21,7 +20,6 @@ hazard_types:
 
   EQ:
     hazard_type: earthquake
-    preprocessed: False
     return_periods:
       HIG: [100, 250]
       MED: [475, 475]
@@ -30,7 +28,6 @@ hazard_types:
 
   DG:
     hazard_type: drought
-    preprocessed: False
     return_periods:
       HIG: 5
       MED: 50
@@ -40,7 +37,6 @@ hazard_types:
 
   VA:
     hazard_type: volcanic_ash
-    preprocessed: True
     values:
       HIG: [103]
       MED: [102]
@@ -49,7 +45,6 @@ hazard_types:
 
   CY:
     hazard_type: strong_wind
-    preprocessed: False
     return_periods:
       HIG: 50
       MED: 100
@@ -59,7 +54,6 @@ hazard_types:
 
   TS:
     hazard_type: tsunami
-    preprocessed: True
     values:
       HIG: [1]
       MED: [2]
@@ -67,7 +61,6 @@ hazard_types:
 
   SS:
     hazard_type: coastal_flood
-    preprocessed: False
     return_periods:
       HIG: 10
       MED: 50

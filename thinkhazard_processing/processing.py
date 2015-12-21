@@ -103,7 +103,8 @@ def process_hazardset(hazardset_id, force=False):
             # Open rasters
             layers = {}
             readers = {}
-            if type_settings['preprocessed']:
+            if 'values' in type_settings.keys():
+                # preprocessed layer
                 layer = DBSession.query(Layer) \
                     .filter(Layer.hazardset_id == hazardset.id) \
                     .one()
@@ -194,7 +195,8 @@ def create_outputs(hazardset, layers, readers):
 
         # Try block to include admindiv.code in exception message
         try:
-            if type_settings['preprocessed']:
+            if 'values' in type_settings.keys():
+                # preprocessed layer
                 hazardlevel = preprocessed_hazardlevel(hazardset,
                                                        layers[0], readers[0],
                                                        reprojected)
