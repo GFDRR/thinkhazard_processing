@@ -39,28 +39,26 @@ INSERT INTO datamart.rel_hazardcategory_administrativedivision (
     source
 )
 SELECT DISTINCT
-    o.admin_id AS administrativedivision_id,
-    first_value(hc.id) OVER w AS hazardcategory_id,
-    first_value(hs.id) OVER w AS source
+    output.admin_id AS administrativedivision_id,
+    first_value(category.id) OVER w AS hazardcategory_id,
+    first_value(set.id) OVER w AS source
 FROM
-    processing.output AS o
-    JOIN processing.hazardset AS hs
-        ON hs.id = o.hazardset_id
-    JOIN datamart.hazardcategory AS hc
-        ON hc.hazardtype_id = hs.hazardtype_id
-        AND hc.hazardlevel_id = o.hazardlevel_id
+    processing.output AS output
+    JOIN processing.hazardset AS set
+        ON set.id = output.hazardset_id
+    JOIN datamart.hazardcategory AS category
+        ON category.hazardtype_id = hs.hazardtype_id
+        AND category.hazardlevel_id = output.hazardlevel_id
 WINDOW w AS (
     PARTITION BY
-        o.admin_id,
-        hs.hazardtype_id
+        output.admin_id,
+        set.hazardtype_id
     ORDER BY
-        hs.calculation_method_quality DESC,
-        hs.scientific_quality DESC,
-        hs.local DESC,
-        hs.data_lastupdated_date DESC
-)
-ORDER BY
-    o.admin_id;
+        set.calculation_method_quality DESC,
+        set.scientific_quality DESC,
+        set.local DESC,
+        set.data_lastupdated_date DESC
+);
 '''
 
 
@@ -72,27 +70,25 @@ INSERT INTO datamart.rel_hazardcategory_administrativedivision (
     source
 )
 SELECT DISTINCT
-    ad_parent.id AS administrativedivision_id,
-    first_value(hc.id) OVER w AS hazardcategory_id,
-    first_value(hc_ad.source) OVER w AS source
+    admindiv_parent.id AS administrativedivision_id,
+    first_value(category.id) OVER w AS hazardcategory_id,
+    first_value(category_admindiv.source) OVER w AS source
 FROM
-    datamart.rel_hazardcategory_administrativedivision AS hc_ad
-    JOIN datamart.hazardcategory AS hc
-        ON hc.id = hc_ad.hazardcategory_id
-    JOIN datamart.enum_hazardlevel AS hl
-        ON hl.id =  hc.hazardlevel_id
-    JOIN datamart.administrativedivision AS ad_child
-        ON ad_child.id = hc_ad.administrativedivision_id
-    JOIN datamart.administrativedivision AS ad_parent
-        ON ad_parent.code = ad_child.parent_code
-WHERE ad_parent.leveltype_id = {}
+    datamart.rel_hazardcategory_administrativedivision AS category_admindiv
+    JOIN datamart.hazardcategory AS category
+        ON category.id = category_admindiv.hazardcategory_id
+    JOIN datamart.enum_hazardlevel AS level
+        ON level.id =  category.hazardlevel_id
+    JOIN datamart.administrativedivision AS admindiv_child
+        ON admindiv_child.id = category_admindiv.administrativedivision_id
+    JOIN datamart.administrativedivision AS admindiv_parent
+        ON admindiv_parent.code = admindiv_child.parent_code
+WHERE admindiv_parent.leveltype_id = {}
 WINDOW w AS (
     PARTITION BY
-        ad_parent.id,
-        hc.hazardtype_id
+        admindiv_parent.id,
+        category.hazardtype_id
     ORDER BY
-        hl.order
-)
-ORDER BY
-    ad_parent.id;
+        level.order
+);
 '''.format(AdminLevelType.get(level).id)
