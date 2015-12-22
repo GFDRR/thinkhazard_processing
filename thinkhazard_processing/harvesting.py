@@ -207,8 +207,9 @@ def harvest_layer(object, dry_run=False):
         hazardset = HazardSet()
         hazardset.id = hazardset_id
         hazardset.hazardtype = hazardtype
+        hazardset.data_lastupdated_date = data_update_date
+        hazardset.metadata_lastupdated_date = metadata_update_date
         DBSession.add(hazardset)
-
     else:
         # print '  Hazardset {} found'.format(hazardset_id)
         pass
