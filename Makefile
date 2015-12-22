@@ -13,8 +13,11 @@ help:
 	@echo "- initdb                  Initialize database"
 	@echo "- check                   Check the code with flake8"
 	@echo "- test                    Run the unit tests"
-	@echo "- process                 Run the processes"
-	@echo "- decisiontree            Run the decision tree"
+	@echo "- harvest                 Harvest GeoNode layers metadata"
+	@echo "- download                Download raster data from GeoNode"
+	@echo "- complete                Mark complete hazardsets as such"
+	@echo "- process                 Compute hazard levels from hazardsets for administrative divisions level 2"
+	@echo "- decisiontree            Run the decision tree and perform upscaling"
 	@echo
 
 .PHONY: install
@@ -23,6 +26,18 @@ install: .build/requirements.timestamp
 .PHONY: initdb
 initdb: .build/requirements.timestamp
 	.build/venv/bin/initialize_db
+
+.PHONY: harvest
+harvest: .build/requirements.timestamp
+	.build/venv/bin/harvest
+
+.PHONY: download
+download: .build/requirements.timestamp
+	.build/venv/bin/download
+
+.PHONY: complete
+complete: .build/requirements.timestamp
+	.build/venv/bin/complete
 
 .PHONY: process
 process: .build/requirements.timestamp
