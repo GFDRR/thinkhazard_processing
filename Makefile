@@ -13,9 +13,11 @@ help:
 	@echo "- initdb                  Initialize database"
 	@echo "- check                   Check the code with flake8"
 	@echo "- test                    Run the unit tests"
-	@echo "- harvest                 Harvest geonode"
-	@echo "- process                 Run the processes"
-	@echo "- decisiontree            Run the decision tree"
+	@echo "- harvest                 Harvest GeoNode layers metadata"
+	@echo "- download                Download raster data from GeoNode"
+	@echo "- complete                Mark complete hazardsets as such"
+	@echo "- process                 Compute hazard levels from hazardsets for administrative divisions level 2"
+	@echo "- decisiontree            Run the decision tree and perform upscaling"
 	@echo
 
 .PHONY: install

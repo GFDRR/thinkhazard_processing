@@ -106,7 +106,7 @@ def harvest_layer(object, dry_run=False):
         return False
 
     type_settings = settings['hazard_types'][hazardtype.mnemonic]
-    preprocessed = type_settings['preprocessed']
+    preprocessed = 'values' in type_settings
 
     '''
     csw_wkt_geometry = object['csw_wkt_geometry']
@@ -127,19 +127,14 @@ def harvest_layer(object, dry_run=False):
         bounds[3] < 45)
     '''
 
-    if preprocessed is None:
-        logger.warning('{} - No process configuration'.format(title))
-        return False
-
-    elif preprocessed is True:
+    if preprocessed is True:
         hazardlevel = None
         hazard_unit = None
         if object['hazard_period']:
             logger.info('{} - Has a return period'.format(title))
             return False
         hazard_period = None
-
-    elif preprocessed is False:
+    else:
         hazard_period = int(object['hazard_period'])
         hazardlevel = None
         for level in (u'LOW', u'MED', u'HIG'):
@@ -202,7 +197,7 @@ def harvest_layer(object, dry_run=False):
     hazardset = DBSession.query(HazardSet).get(hazardset_id)
     if hazardset is None:
 
-        logger.info('{} - Create new HazardSet {}'
+        logger.info('{} - Create new hazardset {}'
                     .format(title, hazardset_id))
         hazardset = HazardSet()
         hazardset.id = hazardset_id
@@ -210,7 +205,7 @@ def harvest_layer(object, dry_run=False):
         DBSession.add(hazardset)
 
     else:
-        # print '  HazardSet {} founded'.format(hazardset_id)
+        # print '  Hazardset {} found'.format(hazardset_id)
         pass
 
     layer = DBSession.query(Layer) \

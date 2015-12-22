@@ -50,7 +50,7 @@ def complete(hazardset_id=None, force=False, dry_run=False):
     if hazardset_id is not None:
         ids = ids.filter(HazardSet.id == hazardset_id)
     for id in ids:
-        logger.info(id[0])
+        logger.info('  Working on hazardset {}'.format(id[0]))
         try:
             complete_hazardset(id[0])
             if dry_run:
@@ -65,17 +65,17 @@ def complete(hazardset_id=None, force=False, dry_run=False):
 def complete_hazardset(hazardset_id, dry_run=False):
     hazardset = DBSession.query(HazardSet).get(hazardset_id)
     if hazardset is None:
-        raise Exception('HazardSet {} does not exist.'
+        raise Exception('Hazardset {} does not exist.'
                         .format(hazardset_id))
 
     hazardtype = hazardset.hazardtype
     type_settings = settings['hazard_types'][hazardtype.mnemonic]
-    preprocessed = type_settings['preprocessed']
+    preprocessed = 'values' in type_settings
 
     layers = []
     if preprocessed:
         if len(hazardset.layers) == 0:
-            logger.info('  No layer founded')
+            logger.info('  No layer found')
             return False
         layers.append(hazardset.layers[0])
     else:
@@ -102,6 +102,7 @@ def complete_hazardset(hazardset_id, dry_run=False):
 
     if stats.count() > 1:
         logger.warning('  Mixed local and global layers')
+        return False
 
     stat = stats.one()
 

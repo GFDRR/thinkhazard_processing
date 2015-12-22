@@ -86,8 +86,12 @@ def download_layer(geonode_id):
         logger.info('Retrieving {}'.format(url))
         response, content = h.request(url)
 
-        with open(layer.path(), 'wb') as f:
-            f.write(content)
+        try:
+            with open(layer.path(), 'wb') as f:
+                f.write(content)
+                layer.downloaded = True
+        except EnvironmentError:
+            logger.error('Writing data from layer {} failed'.format(
+                layer.name()))
 
-    layer.downloaded = True
     DBSession.flush()
