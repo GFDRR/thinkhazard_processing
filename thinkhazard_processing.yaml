@@ -1,37 +1,71 @@
 sqlalchemy.url: postgresql://www-data:www-data@localhost:5432/thinkhazard_processing
+data_path: /var/sig
 
 hazard_types:
   FL:
     hazard_type: river_flood
-    global:
-      return_periods:
-        LOW: 1000
-        MED: 50
-        HIG: 25
-    local:
-      return_periods:
-        LOW: 100
-        MED: 50
-        HIG: 25
+    return_periods:
+      HIG: [10, 25]
+      MED: 50
+      LOW: [100, 1000]
     thresholds:
-      cm: 100
-      dm: 10
-      m: 1
+      global:
+        cm: 100
+        dm: 10
+        m: 1
+      local:
+        cm: 50
+        dm: 5
+        m: 0.5
+
   EQ:
     hazard_type: earthquake
-    global:
-      return_periods:
-        LOW: 2475
-        MED: 475
-        HIG: 250
-    local:
-      return_periods:
-        LOW: 2500
-        MED: 475
-        HIG: 100
-    thresholds:
-      PGA-gal: 98.0665
-      PGA-g: 98.0665
-      SA-g: 98.0665
+    return_periods:
+      HIG: [100, 250]
+      MED: [475, 475]
+      LOW: [2475, 2500]
+    thresholds: 98.0665
 
-data_path: /tmp
+  DG:
+    hazard_type: drought
+    return_periods:
+      HIG: 5
+      MED: 50
+      LOW: 1000
+    inverted_comparison: True
+    thresholds: 1700
+
+  VA:
+    hazard_type: volcanic_ash
+    values:
+      HIG: [103]
+      MED: [102]
+      LOW: [101]
+      VLO: [100, 0]
+
+  CY:
+    hazard_type: strong_wind
+    return_periods:
+      HIG: 50
+      MED: 100
+      LOW: 1000
+    thresholds:
+      "km/h": 80
+
+  TS:
+    hazard_type: tsunami
+    values:
+      HIG: [1]
+      MED: [2]
+      LOW: [3]
+
+  SS:
+    hazard_type: coastal_flood
+    return_periods:
+      HIG: 10
+      MED: 50
+      LOW: 100
+    thresholds:
+      HIG: 2
+      MED: 0.5
+      LOW: 0.5

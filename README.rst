@@ -22,6 +22,99 @@ For more options, see::
 
     $ make help
 
+Configure using thinkhazard_processing.yaml
+===========================================
+
+Keys in configuration file:
+
+sqlalchemy.url
+--------------
+
+Database connection parameters, example:
+
+.. code:: yaml
+
+    sqlalchemy.url: postgresql://www-data:www-data@localhost:5432/thinkhazard_processing
+
+data_path
+---------
+
+Path to main data folder, example:
+
+.. code:: yaml
+
+    data_path: /var/sig
+
+For production, we recommend a dedicated disk partition.
+
+hazard_types
+------------
+
+Harvesting and processing configuration for each hazard type.
+One entry for each hazard type mnemonic.
+
+Possible subkeys include the following:
+
+- ``hazard_type``: Corresponding hazard_type value in geonode.
+
+- ``return_periods``: One entry per hazard level mnemonic with
+  corresponding return periods. Each return period can be a value or a list
+  with minimum and maximum values, example:
+
+  .. code:: yaml
+
+      return_periods:
+        HIG: [10, 25]
+        MED: 50
+        LOW: [100, 1000]
+
+- ``thresholds``: Flexible threshold configuration.
+
+  This can be a simple and global value per hazardtype. Example:
+
+  .. code:: yaml
+
+       thresholds: 1700
+
+  But it can also contain one or many sublevels for complex configurations:
+
+  1) ``global`` and ``local`` entries for corresponding hazardsets.
+  2) One entry per hazard level mnemonic.
+  3) One entry per hazard unit from geonode.
+
+  Example:
+
+  .. code:: yaml
+
+       thresholds:
+         global:
+           HIG:
+             unit1: value1
+             unit2: value2
+           MED:
+             unit1: value1
+             unit2: value2
+           LOW:
+             unit1: value1
+             unit2: value2
+         local:
+           unit1: value1
+           unit2: value2
+
+- ``values``: One entry per hazard level,
+  with list of corresponding values in preprocessed layer.
+  If present, the layer is considered as preprocessed, and the above
+  ``thresholds`` and ``return_periods`` are not taken into account.
+  Example:
+
+  .. code:: yaml
+
+      values:
+        HIG: [103]
+        MED: [102]
+        LOW: [101]
+        VLO: [100, 0]
+
 Use ``local_settings.yaml``
 ===========================
 
@@ -33,6 +126,21 @@ For example, you can define a specific database connection with a
 ``local_settings.yaml`` file that looks like this::
 
     sqlalchemy.url: postgresql://www-data:www-data@localhost:9999/thinkhazard
+
+Processing tasks
+================
+
+Thinkhazard_processing provides several consecutive tasks to populate the
+thinkhazard datamart database. These are:
+
+``.build/venv/bin/process [--hazarset_id ...] [--force] [--dry-run]``
+
+Calculate output from hazardsets and administrative divisions.
+
+``.build/venv/bin/decision_tree [--force] [--dry-run]``
+
+Apply the decision tree followed by upscaling on process outputs to get the final
+relations between administrative divisions and hazard categories.
 
 Run tests
 =========
