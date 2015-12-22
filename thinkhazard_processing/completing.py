@@ -55,8 +55,9 @@ def complete(hazardset_id=None, force=False, dry_run=False):
             if not complete_hazardset(id[0]):
                 hazardset = DBSession.query(HazardSet).get(id)
                 if hazardset.processed:
-                    logger.info('Deleting previous {} outputs'
-                                .format(hazardset.outputs.count()))
+                    logger.info('Deleting {} previous outputs related \
+                                to this hazardset'.format(
+                                hazardset.outputs.count()))
                     hazardset.outputs.delete()
             if dry_run:
                 transaction.abort()

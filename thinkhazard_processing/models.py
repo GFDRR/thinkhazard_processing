@@ -90,7 +90,7 @@ class Layer(Base):
     # the return period is typically 100, 475, 2475 years but it can vary
     return_period = Column(Integer)
 
-    # Flood need a mask layer
+    # Flood hazardtype requires a mask layer
     mask = Column(Boolean, nullable=False)
 
     # pixel values have a unit:
