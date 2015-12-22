@@ -1,4 +1,5 @@
 PY_FILES = $(shell find thinkhazard_processing -type f -name '*.py' 2> /dev/null)
+DATA = world
 
 .PHONY: all
 all: help
@@ -11,6 +12,7 @@ help:
 	@echo
 	@echo "- install                 Install thinkhazard"
 	@echo "- initdb                  Initialize database"
+	@echo "- populatedb              Populates database. Use DATA=turkey if you want to work with a sample data set"
 	@echo "- check                   Check the code with flake8"
 	@echo "- test                    Run the unit tests"
 	@echo "- harvest                 Harvest GeoNode layers metadata"
@@ -26,6 +28,17 @@ install: .build/requirements.timestamp
 .PHONY: initdb
 initdb: .build/requirements.timestamp
 	.build/venv/bin/initialize_db
+
+.PHONY: populatedb
+populatedb: .build/requirements.timestamp
+	wget -nc "http://dev.camptocamp.com/files/thinkhazard/$(DATA)/g2015_2014_0.sql.zip"
+	unzip -o g2015_2014_0.sql.zip
+	wget -nc "http://dev.camptocamp.com/files/thinkhazard/$(DATA)/g2015_2014_1.sql.zip"
+	unzip -o g2015_2014_1.sql.zip
+	wget -nc "http://dev.camptocamp.com/files/thinkhazard/$(DATA)/g2015_2014_2.sql.zip"
+	unzip -o g2015_2014_2.sql.zip
+	.build/venv/bin/populate_db
+	rm -rf g2015_2014_*
 
 .PHONY: harvest
 harvest: .build/requirements.timestamp

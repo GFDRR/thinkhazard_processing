@@ -3,3 +3,4 @@
 .build
 local.tests.yaml
 local_settings.yaml
+g2015_*
