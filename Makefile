@@ -13,6 +13,8 @@ help:
 	@echo "- install                 Install thinkhazard"
 	@echo "- initdb                  Initialize database"
 	@echo "- populatedb              Populates database. Use DATA=turkey if you want to work with a sample data set"
+	@echo "- importrecommendations   Import recommendations"
+	@echo "- importfurtherresources  Import further resources"
 	@echo "- check                   Check the code with flake8"
 	@echo "- test                    Run the unit tests"
 	@echo "- harvest                 Harvest GeoNode layers metadata"
@@ -39,6 +41,14 @@ populatedb: .build/requirements.timestamp
 	unzip -o g2015_2014_2.sql.zip
 	.build/venv/bin/populate_db
 	rm -rf g2015_2014_*
+
+.PHONY: importrecommendations
+importrecommendations: .build/requirements.timestamp
+	.build/venv/bin/import_recommendations
+
+.PHONY: importfurtherresources
+importfurtherresources: .build/requirements.timestamp
+	.build/venv/bin/import_further_resources
 
 .PHONY: harvest
 harvest: .build/requirements.timestamp
