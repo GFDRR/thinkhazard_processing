@@ -156,9 +156,11 @@ def create_outputs(hazardset, layers, readers):
         else:
             bbox = bbox.intersection(polygon)
 
+    simplified = func.ST_Simplify(AdministrativeDivision.geom, 0.005) \
+        .label('simplified')
     admindivs = DBSession.query(AdministrativeDivision) \
-        .filter(AdministrativeDivision.leveltype_id == adminlevel_REG.id) \
-        .limit(1000)
+        .add_columns(simplified) \
+        .filter(AdministrativeDivision.leveltype_id == adminlevel_REG.id)
 
     if hazardset.local:
         admindivs = admindivs \
@@ -172,7 +174,7 @@ def create_outputs(hazardset, layers, readers):
     outputs = []
     total = admindivs.count()
     logger.info('  Iterating over {} administrative divisions'.format(total))
-    for admindiv in admindivs:
+    for admindiv, simplified in admindivs:
 
         current += 1
         if admindiv.geom is None:
@@ -180,7 +182,7 @@ def create_outputs(hazardset, layers, readers):
                            .format(admindiv.code, admindiv.name))
             continue
 
-        shape = to_shape(admindiv.geom)
+        shape = to_shape(simplified)
 
         if not shape.intersects(bbox):
             continue
