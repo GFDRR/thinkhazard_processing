@@ -115,22 +115,10 @@ def populate_datamart():
     print 'populate datamart'
     adminlevel_REG = AdminLevelType.get(u'REG')
 
-    from functools import partial
-    import pyproj
-    from shapely.ops import transform
-
-    project = partial(
-        pyproj.transform,
-        pyproj.Proj(init='epsg:4326'),
-        pyproj.Proj(init='epsg:3857'))
-
     shape = MultiPolygon([
         Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)])
     ])
-    reprojected = transform(
-        project,
-        shape)
-    geometry = from_shape(reprojected, 3857)
+    geometry = from_shape(shape, 4326)
 
     div = AdministrativeDivision(**{
         'code': 30,

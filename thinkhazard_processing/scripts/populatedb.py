@@ -44,7 +44,7 @@ DELETE FROM g2015_2014_2 WHERE gid = 1059;
     connection.execute('''
 INSERT INTO datamart.administrativedivision (code, leveltype_id, name,
 parent_code, geom)
-SELECT adm0_code, 1, adm0_name, NULL, ST_Transform(geom, 3857) as geom
+SELECT adm0_code, 1, adm0_name, NULL, geom
 FROM g2015_2014_0;
 SELECT DropGeometryColumn('public', 'g2015_2014_0', 'geom');
 DROP TABLE g2015_2014_0;''')
@@ -54,7 +54,7 @@ DROP TABLE g2015_2014_0;''')
     connection.execute('''
 INSERT INTO datamart.administrativedivision (code, leveltype_id, name,
 parent_code, geom)
-SELECT adm1_code, 2, adm1_name, adm0_code, ST_Transform(geom, 3857) as geom
+SELECT adm1_code, 2, adm1_name, adm0_code, geom
 FROM g2015_2014_1;
 SELECT DropGeometryColumn('public', 'g2015_2014_1', 'geom');
 DROP TABLE g2015_2014_1;''')
@@ -64,7 +64,7 @@ DROP TABLE g2015_2014_1;''')
     connection.execute('''
 INSERT INTO datamart.administrativedivision (code, leveltype_id, name,
 parent_code, geom)
-SELECT adm2_code, 3, adm2_name, adm1_code, ST_Transform(geom, 3857) as geom
+SELECT adm2_code, 3, adm2_name, adm1_code, geom
 FROM g2015_2014_2;
 SELECT DropGeometryColumn('public', 'g2015_2014_2', 'geom');
 DROP TABLE g2015_2014_2;

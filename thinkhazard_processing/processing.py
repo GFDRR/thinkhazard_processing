@@ -2,13 +2,10 @@ import logging
 import transaction
 import datetime
 import rasterio
-import pyproj
 from rasterio import (
     features,
     window_shape)
-from shapely.ops import transform
 from shapely.geometry import box
-from functools import partial
 from geoalchemy2.shape import to_shape
 from sqlalchemy import func
 
@@ -35,12 +32,6 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 logger.setLevel(logging.DEBUG)
-
-
-project = partial(
-    pyproj.transform,
-    pyproj.Proj(init='epsg:3857'),
-    pyproj.Proj(init='epsg:4326'))
 
 
 class ProcessException(Exception):
@@ -166,19 +157,15 @@ def create_outputs(hazardset, layers, readers):
             bbox = bbox.intersection(polygon)
 
     admindivs = DBSession.query(AdministrativeDivision) \
-        .filter(AdministrativeDivision.leveltype_id == adminlevel_REG.id)
+        .filter(AdministrativeDivision.leveltype_id == adminlevel_REG.id) \
+        .limit(1000)
 
     if hazardset.local:
-        # TODO : this could be optimized (double reprojection)
-        # Better to had a geom_4326 column
         admindivs = admindivs \
-            .filter(
-                func.ST_Transform(AdministrativeDivision.geom, 4326)
-                .intersects(
+            .filter(AdministrativeDivision.geom.intersects(
                     func.ST_GeomFromText(bbox.wkt, 4326))) \
-            .filter(func.ST_Intersects(
-                func.ST_Transform(AdministrativeDivision.geom, 4326),
-                func.ST_GeomFromText(bbox.wkt, 4326)))
+            .filter(func.ST_Intersects(AdministrativeDivision.geom,
+                    func.ST_GeomFromText(bbox.wkt, 4326)))
 
     current = 0
     last_percent = 0
@@ -193,11 +180,9 @@ def create_outputs(hazardset, layers, readers):
                            .format(admindiv.code, admindiv.name))
             continue
 
-        reprojected = transform(
-            project,
-            to_shape(admindiv.geom))
+        shape = to_shape(admindiv.geom)
 
-        if not reprojected.intersects(bbox):
+        if not shape.intersects(bbox):
             continue
 
         # Try block to include admindiv.code in exception message
@@ -206,11 +191,11 @@ def create_outputs(hazardset, layers, readers):
                 # preprocessed layer
                 hazardlevel = preprocessed_hazardlevel(hazardset,
                                                        layers[0], readers[0],
-                                                       reprojected)
+                                                       shape)
             else:
                 hazardlevel = notpreprocessed_hazardlevel(hazardset,
                                                           layers, readers,
-                                                          reprojected)
+                                                          shape)
 
         except Exception as e:
             e.message = ("{}-{} raises an exception :\n{}"
