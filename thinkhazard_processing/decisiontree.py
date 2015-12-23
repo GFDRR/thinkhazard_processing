@@ -47,7 +47,7 @@ FROM
     JOIN processing.hazardset AS set
         ON set.id = output.hazardset_id
     JOIN datamart.hazardcategory AS category
-        ON category.hazardtype_id = hs.hazardtype_id
+        ON category.hazardtype_id = set.hazardtype_id
         AND category.hazardlevel_id = output.hazardlevel_id
 WINDOW w AS (
     PARTITION BY
