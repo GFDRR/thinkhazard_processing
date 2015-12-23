@@ -28,6 +28,7 @@ setup(name='thinkhazard_processing',
       entry_points="""\
       [console_scripts]
       initialize_db = thinkhazard_processing.scripts.initializedb:main
+      populate_db = thinkhazard_processing.scripts.populatedb:main
       harvest = thinkhazard_processing.scripts.harvest:main
       download = thinkhazard_processing.scripts.download:main
       complete = thinkhazard_processing.scripts.complete:main
