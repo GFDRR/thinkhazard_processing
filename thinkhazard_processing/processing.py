@@ -195,9 +195,9 @@ def create_outputs(hazardset, layers, readers):
                                                        layers[0], readers[0],
                                                        shape)
             else:
-                hazardlevel = notpreprocessed_hazardlevel(hazardset,
-                                                          layers, readers,
-                                                          shape)
+                hazardlevel = notpreprocessed_hazardlevel(
+                    hazardset.hazardtype.mnemonic, type_settings, layers,
+                    readers, shape)
 
         except Exception as e:
             e.message = ("{}-{} raises an exception :\n{}"
@@ -282,24 +282,27 @@ def preprocessed_hazardlevel(hazardset, layer, reader, geometry):
     return hazardlevel
 
 
-def notpreprocessed_hazardlevel(hazardset, layers, readers, geometry):
-    type_settings = settings['hazard_types'][hazardset.hazardtype.mnemonic]
+def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
+                                geometry):
     level_VLO = HazardLevel.get(u'VLO')
 
     hazardlevel = None
+
+    inverted_comparison = ('inverted_comparison' in type_settings and
+                           type_settings['inverted_comparison'])
 
     for level in (u'HIG', u'MED', u'LOW'):
         layer = layers[level]
         reader = readers[level]
 
-        threshold = get_threshold(hazardset.hazardtype.mnemonic,
+        threshold = get_threshold(hazardtype,
                                   layer.local,
                                   layer.hazardlevel.mnemonic,
                                   layer.hazardunit)
         if threshold is None:
             raise ProcessException(
                 'No threshold found for {} {} {} {}'
-                .format(hazardset.hazardtype.mnemonic,
+                .format(hazardtype,
                         'local' if layer.local else 'global',
                         layer.hazardlevel.mnemonic,
                         layer.hazardunit))
@@ -323,8 +326,6 @@ def notpreprocessed_hazardlevel(hazardset, layers, readers, geometry):
                 transform=reader.window_transform(window),
                 all_touched=True)
 
-            inverted_comparison = ('inverted_comparison' in type_settings and
-                                   type_settings['inverted_comparison'])
             if inverted_comparison:
                 data = data < threshold
             else:
