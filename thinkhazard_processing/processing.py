@@ -4,7 +4,7 @@ import datetime
 import rasterio
 from rasterio import (
     features,
-    window_shape)
+    )
 from shapely.geometry import box
 from geoalchemy2.shape import to_shape
 from sqlalchemy import func
@@ -223,32 +223,12 @@ def create_outputs(hazardset, layers, readers):
     return outputs
 
 
-def shape_size_exceeds(reader, bounds):
-    '''Check the size of the matrix to read from reader
-    Some multipolygons crosses the dateline.
-    This can result in a memory error with large raster files.
-    We bypass this iterate through polygons.
-    See admindiv.code = 28773 for example.
-    '''
-    window = reader.window(*bounds)
-    shape = window_shape(window)
-    if shape[0] * shape[1] * 4 > 100000000:
-        logger.debug("    iterate through multipolygon parts")
-        return True
-    return False
-
-
 def preprocessed_hazardlevel(hazardset, layer, reader, geometry):
     type_settings = settings['hazard_types'][hazardset.hazardtype.mnemonic]
 
     hazardlevel = None
 
-    if shape_size_exceeds(reader, geometry.bounds):
-        polygons = geometry.geoms
-    else:
-        polygons = geometry
-
-    for polygon in polygons:
+    for polygon in geometry.geoms:
         window = reader.window(*polygon.bounds)
         data = reader.read(1, window=window, masked=True)
         if data.shape[0] * data.shape[1] == 0:
@@ -307,12 +287,7 @@ def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
                         layer.hazardlevel.mnemonic,
                         layer.hazardunit))
 
-        if shape_size_exceeds(reader, geometry.bounds):
-            polygons = geometry.geoms
-        else:
-            polygons = geometry
-
-        for polygon in polygons:
+        for polygon in geometry.geoms:
             window = reader.window(*polygon.bounds)
             data = reader.read(1, window=window, masked=True)
             if data.shape[0] * data.shape[1] == 0:
