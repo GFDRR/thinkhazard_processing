@@ -71,6 +71,12 @@ DROP TABLE g2015_2014_2;
 ''')
     trans.commit()
 
+    trans = connection.begin()
+    connection.execute('''
+DELETE from datamart.administrativedivision WHERE code in (4375, 426, 10);
+''')
+    trans.commit()
+
     print "{} administrative divisions created".format(
         DBSession.query(AdministrativeDivision).count()
     )
