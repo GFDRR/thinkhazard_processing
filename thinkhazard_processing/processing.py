@@ -2,13 +2,10 @@ import logging
 import transaction
 import datetime
 import rasterio
-import pyproj
 from rasterio import (
     features,
-    window_shape)
-from shapely.ops import transform
+    )
 from shapely.geometry import box
-from functools import partial
 from geoalchemy2.shape import to_shape
 from sqlalchemy import func
 
@@ -35,12 +32,6 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 logger.setLevel(logging.DEBUG)
-
-
-project = partial(
-    pyproj.transform,
-    pyproj.Proj(init='epsg:3857'),
-    pyproj.Proj(init='epsg:4326'))
 
 
 class ProcessException(Exception):
@@ -165,27 +156,25 @@ def create_outputs(hazardset, layers, readers):
         else:
             bbox = bbox.intersection(polygon)
 
+    simplified = func.ST_Simplify(AdministrativeDivision.geom, 0.005) \
+        .label('simplified')
     admindivs = DBSession.query(AdministrativeDivision) \
+        .add_columns(simplified) \
         .filter(AdministrativeDivision.leveltype_id == adminlevel_REG.id)
 
     if hazardset.local:
-        # TODO : this could be optimized (double reprojection)
-        # Better to had a geom_4326 column
         admindivs = admindivs \
-            .filter(
-                func.ST_Transform(AdministrativeDivision.geom, 4326)
-                .intersects(
+            .filter(AdministrativeDivision.geom.intersects(
                     func.ST_GeomFromText(bbox.wkt, 4326))) \
-            .filter(func.ST_Intersects(
-                func.ST_Transform(AdministrativeDivision.geom, 4326),
-                func.ST_GeomFromText(bbox.wkt, 4326)))
+            .filter(func.ST_Intersects(AdministrativeDivision.geom,
+                    func.ST_GeomFromText(bbox.wkt, 4326)))
 
     current = 0
     last_percent = 0
     outputs = []
     total = admindivs.count()
     logger.info('  Iterating over {} administrative divisions'.format(total))
-    for admindiv in admindivs:
+    for admindiv, simplified in admindivs:
 
         current += 1
         if admindiv.geom is None:
@@ -193,11 +182,9 @@ def create_outputs(hazardset, layers, readers):
                            .format(admindiv.code, admindiv.name))
             continue
 
-        reprojected = transform(
-            project,
-            to_shape(admindiv.geom))
+        shape = to_shape(simplified)
 
-        if not reprojected.intersects(bbox):
+        if not shape.intersects(bbox):
             continue
 
         # Try block to include admindiv.code in exception message
@@ -206,11 +193,11 @@ def create_outputs(hazardset, layers, readers):
                 # preprocessed layer
                 hazardlevel = preprocessed_hazardlevel(hazardset,
                                                        layers[0], readers[0],
-                                                       reprojected)
+                                                       shape)
             else:
-                hazardlevel = notpreprocessed_hazardlevel(hazardset,
-                                                          layers, readers,
-                                                          reprojected)
+                hazardlevel = notpreprocessed_hazardlevel(
+                    hazardset.hazardtype.mnemonic, type_settings, layers,
+                    readers, shape)
 
         except Exception as e:
             e.message = ("{}-{} raises an exception :\n{}"
@@ -236,32 +223,12 @@ def create_outputs(hazardset, layers, readers):
     return outputs
 
 
-def shape_size_exceeds(reader, bounds):
-    '''Check the size of the matrix to read from reader
-    Some multipolygons crosses the dateline.
-    This can result in a memory error with large raster files.
-    We bypass this iterate through polygons.
-    See admindiv.code = 28773 for example.
-    '''
-    window = reader.window(*bounds)
-    shape = window_shape(window)
-    if shape[0] * shape[1] * 4 > 100000000:
-        logger.debug("    iterate through multipolygon parts")
-        return True
-    return False
-
-
 def preprocessed_hazardlevel(hazardset, layer, reader, geometry):
     type_settings = settings['hazard_types'][hazardset.hazardtype.mnemonic]
 
     hazardlevel = None
 
-    if shape_size_exceeds(reader, geometry.bounds):
-        polygons = geometry.geoms
-    else:
-        polygons = geometry
-
-    for polygon in polygons:
+    for polygon in geometry.geoms:
         window = reader.window(*polygon.bounds)
         data = reader.read(1, window=window, masked=True)
         if data.shape[0] * data.shape[1] == 0:
@@ -295,34 +262,32 @@ def preprocessed_hazardlevel(hazardset, layer, reader, geometry):
     return hazardlevel
 
 
-def notpreprocessed_hazardlevel(hazardset, layers, readers, geometry):
-    type_settings = settings['hazard_types'][hazardset.hazardtype.mnemonic]
+def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
+                                geometry):
     level_VLO = HazardLevel.get(u'VLO')
 
     hazardlevel = None
+
+    inverted_comparison = ('inverted_comparison' in type_settings and
+                           type_settings['inverted_comparison'])
 
     for level in (u'HIG', u'MED', u'LOW'):
         layer = layers[level]
         reader = readers[level]
 
-        threshold = get_threshold(hazardset.hazardtype.mnemonic,
+        threshold = get_threshold(hazardtype,
                                   layer.local,
                                   layer.hazardlevel.mnemonic,
                                   layer.hazardunit)
         if threshold is None:
             raise ProcessException(
                 'No threshold found for {} {} {} {}'
-                .format(hazardset.hazardtype.mnemonic,
+                .format(hazardtype,
                         'local' if layer.local else 'global',
                         layer.hazardlevel.mnemonic,
                         layer.hazardunit))
 
-        if shape_size_exceeds(reader, geometry.bounds):
-            polygons = geometry.geoms
-        else:
-            polygons = geometry
-
-        for polygon in polygons:
+        for polygon in geometry.geoms:
             window = reader.window(*polygon.bounds)
             data = reader.read(1, window=window, masked=True)
             if data.shape[0] * data.shape[1] == 0:
@@ -336,8 +301,6 @@ def notpreprocessed_hazardlevel(hazardset, layers, readers, geometry):
                 transform=reader.window_transform(window),
                 all_touched=True)
 
-            inverted_comparison = ('inverted_comparison' in type_settings and
-                                   type_settings['inverted_comparison'])
             if inverted_comparison:
                 data = data < threshold
             else:
