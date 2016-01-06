@@ -50,7 +50,7 @@ def import_further_resources():
                 'url': u'http://www.climateapp.nl/'
             }),
             FurtherResource(**{
-                'text': u'Publications by the Global Facility for Disaster Reduction and Recovery (GFDRR)',  # NOQA
+                'text': u'Publications by GFDRR, providing information on disaster risk assessment, risk reduction and preparedness',  # NOQA
                 'url': u'https://www.gfdrr.org/publications'
             }),
             FurtherResource(**{
