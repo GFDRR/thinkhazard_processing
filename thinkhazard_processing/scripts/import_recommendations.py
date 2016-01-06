@@ -57,6 +57,7 @@ def import_recommendations():
 
         with open('data/technical_recommendations.csv', 'rb') as csvfile:
             recommendations = csv.reader(csvfile, delimiter=',')
+            next(recommendations, None)  # skip the headers
             for row in recommendations:
                 technical_rec = TechnicalRecommendation(**{
                     'text': row[0]

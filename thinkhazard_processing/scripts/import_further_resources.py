@@ -46,11 +46,11 @@ def import_further_resources():
                 'url': u'http://www.wri.org/floods'
             }),
             FurtherResource(**{
-                'text': u'The Climate app, providing information on possible risk reducing intervention measures under site site-specific conditions',  # NOQA
+                'text': u'The Climate app, providing information on possible risk reducing intervention measures under site-specific conditions',  # NOQA
                 'url': u'http://www.climateapp.nl/'
             }),
             FurtherResource(**{
-                'text': u'Publications by the Global Facility for Disaster Reduction and Recovery (GFDRR)',  # NOQA
+                'text': u'Publications by GFDRR, providing information on disaster risk assessment, risk reduction and preparedness',  # NOQA
                 'url': u'https://www.gfdrr.org/publications'
             }),
             FurtherResource(**{
