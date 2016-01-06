@@ -46,7 +46,7 @@ def import_further_resources():
                 'url': u'http://www.wri.org/floods'
             }),
             FurtherResource(**{
-                'text': u'The Climate app, providing information on possible risk reducing intervention measures under site site-specific conditions',  # NOQA
+                'text': u'The Climate app, providing information on possible risk reducing intervention measures under site-specific conditions',  # NOQA
                 'url': u'http://www.climateapp.nl/'
             }),
             FurtherResource(**{
