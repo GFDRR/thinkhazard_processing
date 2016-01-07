@@ -75,6 +75,7 @@ def import_further_resources():
             'text': u'Drought Risk Reduction: Framework and Practices',
             'url': u'https://www.gfdrr.org/sites/gfdrr/files/publication/Drought%20Risk%20Reduction-Contributing%20to%20the%20Implementation%20of%20the%20Hyogo%20Framework%20for%20Action.pdf'  # NOQA
         })
+        add_resource(u'DG', further_resource)
 
         further_resource = FurtherResource(**{
             'text': u'Learning from Megadisasters: Lessons from the Great Japan Earthquake',  # NOQA
