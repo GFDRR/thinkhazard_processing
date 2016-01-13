@@ -1,4 +1,5 @@
 import logging
+import traceback
 import transaction
 import datetime
 import rasterio
@@ -59,9 +60,9 @@ def process(hazardset_id=None, force=False, dry_run=False):
             else:
                 logger.info('  Committing transaction')
                 transaction.commit()
-        except Exception as e:
+        except Exception:
             transaction.abort()
-            logger.error(e.message)
+            logger.error(traceback.format_exc())
 
 
 def process_hazardset(hazardset_id, force=False):
@@ -156,99 +157,98 @@ def create_outputs(hazardset, layers, readers):
         else:
             bbox = bbox.intersection(polygon)
 
-    simplified = func.ST_Simplify(AdministrativeDivision.geom, 0.005) \
-        .label('simplified')
     admindivs = DBSession.query(AdministrativeDivision) \
-        .add_columns(simplified) \
-        .filter(AdministrativeDivision.leveltype_id == adminlevel_REG.id)
-
-    if hazardset.local:
-        admindivs = admindivs \
-            .filter(AdministrativeDivision.geom.intersects(
-                    func.ST_GeomFromText(bbox.wkt, 4326))) \
-            .filter(func.ST_Intersects(AdministrativeDivision.geom,
-                    func.ST_GeomFromText(bbox.wkt, 4326)))
+        .filter(AdministrativeDivision.leveltype_id == adminlevel_REG.id) \
+        .filter(func.ST_Intersects(AdministrativeDivision.geom,
+                func.ST_GeomFromText(bbox.wkt, 4326))) \
+        .order_by(AdministrativeDivision.id)  # Needed for windowed querying
 
     current = 0
     last_percent = 0
     outputs = []
     total = admindivs.count()
     logger.info('  Iterating over {} administrative divisions'.format(total))
-    for admindiv, simplified in admindivs:
 
-        current += 1
-        if admindiv.geom is None:
-            logger.warning('    {}-{} has null geometry'
-                           .format(admindiv.code, admindiv.name))
-            continue
+    # Windowed querying to limit memory usage
+    limit = 1000  # 1000 records <=> 10 Mo
+    admindivs = admindivs.limit(limit)
+    for offset in xrange(0, total, limit):
+        admindivs = admindivs.offset(offset)
 
-        shape = to_shape(simplified)
+        for admindiv in admindivs:
+            current += 1
 
-        if not shape.intersects(bbox):
-            continue
+            if admindiv.geom is None:
+                logger.warning('    {}-{} has null geometry'
+                               .format(admindiv.code, admindiv.name))
+                continue
 
-        # Try block to include admindiv.code in exception message
-        try:
-            if 'values' in type_settings.keys():
-                # preprocessed layer
-                hazardlevel = preprocessed_hazardlevel(hazardset,
-                                                       layers[0], readers[0],
-                                                       shape)
-            else:
-                hazardlevel = notpreprocessed_hazardlevel(
-                    hazardset.hazardtype.mnemonic, type_settings, layers,
-                    readers, shape)
+            shape = to_shape(admindiv.geom)
 
-        except Exception as e:
-            e.message = ("{}-{} raises an exception :\n{}"
-                         .format(admindiv.code, admindiv.name, e.message))
-            raise
+            # Try block to include admindiv.code in exception message
+            try:
+                if 'values' in type_settings.keys():
+                    # preprocessed layer
+                    hazardlevel = preprocessed_hazardlevel(
+                        type_settings,
+                        layers[0], readers[0],
+                        shape)
+                else:
+                    hazardlevel = notpreprocessed_hazardlevel(
+                        hazardset.hazardtype.mnemonic, type_settings, layers,
+                        readers, shape)
 
-        # Create output record
-        if hazardlevel is not None:
-            # print '    hazardlevel :', output.hazardlevel.mnemonic
-            output = Output()
-            output.hazardset = hazardset
-            output.administrativedivision = admindiv
-            output.hazardlevel = hazardlevel
-            # TODO: calculate coverage ratio
-            output.coverage_ratio = 100
-            outputs.append(output)
+            except Exception as e:
+                e.message = ("{}-{} raises an exception :\n{}"
+                             .format(admindiv.code, admindiv.name, e.message))
+                raise
 
-        percent = int(100.0 * current / total)
-        if percent % 10 == 0 and percent != last_percent:
-            logger.info('  ... processed {}%'.format(percent))
-            last_percent = percent
+            # Create output record
+            if hazardlevel is not None:
+                output = Output()
+                output.hazardset = hazardset
+                output.admin_id = admindiv.id
+                output.hazardlevel = hazardlevel
+                # TODO: calculate coverage ratio
+                output.coverage_ratio = 100
+                outputs.append(output)
+
+            # Remove admindiv from memory
+            DBSession.expunge(admindiv)
+
+            percent = int(100.0 * current / total)
+            if percent % 10 == 0 and percent != last_percent:
+                logger.info('  ... processed {}%'.format(percent))
+                last_percent = percent
 
     return outputs
 
 
-def preprocessed_hazardlevel(hazardset, layer, reader, geometry):
-    type_settings = settings['hazard_types'][hazardset.hazardtype.mnemonic]
-
+def preprocessed_hazardlevel(type_settings, layer, reader, geometry):
     hazardlevel = None
 
     for polygon in geometry.geoms:
         window = reader.window(*polygon.bounds)
         data = reader.read(1, window=window, masked=True)
+
         if data.shape[0] * data.shape[1] == 0:
             continue
         if data.mask.all():
             continue
 
-        division = features.rasterize(
-            ((g, 1) for g in [polygon]),
+        mask = features.geometry_mask(
+            [polygon],
             out_shape=data.shape,
             transform=reader.window_transform(window),
             all_touched=True)
 
-        data.mask = data.mask | ~division.astype(bool)
+        data.mask = data.mask | mask
 
         if data.mask.all():
             continue
 
         for level in (u'HIG', u'MED', u'LOW', u'VLO'):
-            level_obj = HazardLevel.get(unicode(level))
+            level_obj = HazardLevel.get(level)
             if level_obj <= hazardlevel:
                 break
 
@@ -267,6 +267,11 @@ def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
     level_VLO = HazardLevel.get(u'VLO')
 
     hazardlevel = None
+
+    # Create some optimization caches
+    polygons = {}
+    bboxes = {}
+    masks = {}
 
     inverted_comparison = ('inverted_comparison' in type_settings and
                            type_settings['inverted_comparison'])
@@ -287,19 +292,23 @@ def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
                         layer.hazardlevel.mnemonic,
                         layer.hazardunit))
 
-        for polygon in geometry.geoms:
-            window = reader.window(*polygon.bounds)
+        for i in xrange(0, len(geometry.geoms)):
+            if level == u'HIG':
+                polygon = geometry.geoms[i]
+                bbox = polygon.bounds
+                polygons[i] = polygon
+                bboxes[i] = bbox
+            else:
+                polygon = polygons[i]
+                bbox = bboxes[i]
+
+            window = reader.window(*bbox)
             data = reader.read(1, window=window, masked=True)
+
             if data.shape[0] * data.shape[1] == 0:
                 continue
             if data.mask.all():
                 continue
-
-            division = features.rasterize(
-                ((g, 1) for g in [polygon]),
-                out_shape=data.shape,
-                transform=reader.window_transform(window),
-                all_touched=True)
 
             if inverted_comparison:
                 data = data < threshold
@@ -315,11 +324,21 @@ def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
 
                 data.mask = data.mask | mask
 
-            data.mask = data.mask | ~division.astype(bool)
+            if level == u'HIG':
+                mask = features.geometry_mask(
+                    [polygon],
+                    out_shape=data.shape,
+                    transform=reader.window_transform(window),
+                    all_touched=True)
+                masks[i] = mask
+            else:
+                mask = masks[i]
+
+            data.mask = data.mask | mask
 
             if data.any():
                 hazardlevel = layer.hazardlevel
-                break
+                break  # No need to go further
 
             if data.mask.all():
                 continue
@@ -328,7 +347,7 @@ def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
                 hazardlevel = level_VLO
 
         if hazardlevel == layer.hazardlevel:
-            break
+            break  # No need to go further
 
     return hazardlevel
 
