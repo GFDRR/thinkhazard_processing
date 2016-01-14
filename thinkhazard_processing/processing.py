@@ -6,6 +6,7 @@ import rasterio
 from rasterio import (
     features,
     )
+from numpy import ma
 from shapely.geometry import box
 from geoalchemy2.shape import to_shape
 from sqlalchemy import func
@@ -293,7 +294,7 @@ def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
                         layer.hazardunit))
 
         for i in xrange(0, len(geometry.geoms)):
-            if level == u'HIG':
+            if i not in polygons:
                 polygon = geometry.geoms[i]
                 bbox = polygon.bounds
                 polygons[i] = polygon
@@ -322,19 +323,21 @@ def notpreprocessed_hazardlevel(hazardtype, type_settings, layers, readers,
                 else:
                     mask = mask > threshold
 
-                data.mask = data.mask | mask
+                data.mask = ma.getmaskarray(data) | mask.filled(False)
+                if data.mask.all():
+                    continue
 
-            if level == u'HIG':
+            if i in masks:
+                mask = masks[i]
+            else:
                 mask = features.geometry_mask(
                     [polygon],
                     out_shape=data.shape,
                     transform=reader.window_transform(window),
                     all_touched=True)
                 masks[i] = mask
-            else:
-                mask = masks[i]
 
-            data.mask = data.mask | mask
+            data.mask = ma.getmaskarray(data) | mask
 
             if data.any():
                 hazardlevel = layer.hazardlevel
@@ -368,4 +371,6 @@ def get_threshold(hazardtype, local, level, unit):
             mysettings = mysettings[level]
         elif unit in mysettings.keys():
             mysettings = mysettings[unit]
+        else:
+            return None
     return float(mysettings)
