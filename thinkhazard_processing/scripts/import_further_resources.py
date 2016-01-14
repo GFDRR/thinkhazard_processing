@@ -69,7 +69,7 @@ def import_further_resources():
         })
         add_resource(u'CY', further_resource)
         add_resource(u'DG', further_resource)
-        add_resource(u'SS', further_resource)
+        add_resource(u'CF', further_resource)
 
         further_resource = FurtherResource(**{
             'text': u'Drought Risk Reduction: Framework and Practices',
@@ -129,7 +129,7 @@ def import_further_resources():
             'text': u'World Bank Publication Series: Turn Down the Heat',
             'url': u'http://www.worldbank.org/en/topic/climatechange/publication/turn-down-the-heat'  # NOQA
         })
-        add_resource(u'SS', further_resource)
+        add_resource(u'CF', further_resource)
 
 
 def add_resource(hazard_type, resource):
