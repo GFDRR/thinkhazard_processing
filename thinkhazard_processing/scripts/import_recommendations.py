@@ -41,7 +41,7 @@ def import_recommendations():
                 DBSession.add(hazardcategory)
 
         categories = []
-        for type in [u'EQ', u'FL', u'CY', u'TS', u'SS', u'VA', u'DG']:
+        for type in [u'EQ', u'FL', u'CY', u'TS', u'CF', u'VA', u'DG']:
             for level in [u'HIG', u'MED', u'LOW', u'VLO']:
                 hazardcategory = DBSession.query(HazardCategory) \
                     .join(HazardLevel) \
@@ -82,7 +82,7 @@ def import_recommendations():
             (u'FL', 6),
             (u'EQ', 7),
             (u'CY', 8),
-            (u'SS', 9),
+            (u'CF', 9),
             (u'DG', 10),
             (u'TS', 11),
             (u'VA', 12),

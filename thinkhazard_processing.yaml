@@ -64,7 +64,7 @@ hazard_types:
       MED: [2]
       LOW: [3]
 
-  SS:
+  CF:
     hazard_type: coastal_flood
     return_periods:
       HIG: 10
