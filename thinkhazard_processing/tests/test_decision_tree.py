@@ -3,17 +3,17 @@ import transaction
 from datetime import datetime
 from shapely.geometry import Polygon
 from geoalchemy2.shape import from_shape
+
 from thinkhazard_common.models import (
     DBSession,
     AdministrativeDivision,
-    HazardType,
     HazardLevel,
-    )
-from ..models import (
     HazardSet,
+    HazardType,
     Layer,
     Output,
     )
+
 from common import new_geonode_id
 
 

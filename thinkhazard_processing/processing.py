@@ -16,13 +16,12 @@ from thinkhazard_common.models import (
     AdministrativeDivision,
     AdminLevelType,
     HazardLevel,
-    )
-from .models import (
     HazardSet,
     Layer,
     Output,
     )
-from . import settings
+
+from . import settings, layer_path
 
 
 logger = logging.getLogger(__name__)
@@ -100,7 +99,7 @@ def process_hazardset(hazardset_id, force=False):
                 layer = DBSession.query(Layer) \
                     .filter(Layer.hazardset_id == hazardset.id) \
                     .one()
-                reader = rasterio.open(layer.path())
+                reader = rasterio.open(layer_path(layer))
 
                 layers[0] = layer
                 readers[0] = reader
@@ -112,7 +111,7 @@ def process_hazardset(hazardset_id, force=False):
                         .filter(Layer.hazardset_id == hazardset.id) \
                         .filter(Layer.hazardlevel_id == hazardlevel.id) \
                         .one()
-                    reader = rasterio.open(layer.path())
+                    reader = rasterio.open(layer_path(layer))
 
                     layers[level] = layer
                     readers[level] = reader
@@ -121,7 +120,7 @@ def process_hazardset(hazardset_id, force=False):
                         .filter(Layer.hazardset_id == hazardset.id) \
                         .filter(Layer.mask.is_(True)) \
                         .one()
-                    reader = rasterio.open(layer.path())
+                    reader = rasterio.open(layer_path(layer))
                     layers['mask'] = layer
                     readers['mask'] = reader
 

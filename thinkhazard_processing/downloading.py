@@ -4,10 +4,12 @@ from urlparse import urlunsplit
 from httplib2 import Http
 import transaction
 
-from thinkhazard_common.models import DBSession
+from thinkhazard_common.models import (
+    DBSession,
+    Layer,
+    )
 
-from . import settings
-from .models import Layer
+from . import settings, layer_path
 
 
 logger = logging.getLogger(__name__)
@@ -72,11 +74,11 @@ def download_layer(geonode_id):
 
     logger.info('Downloading layer {}'.format(layer.name()))
 
-    dir_path = os.path.dirname(layer.path())
+    dir_path = os.path.dirname(layer_path(layer))
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-    if not os.path.isfile(layer.path()):
+    if not os.path.isfile(layer_path(layer)):
         h = Http()
         url = urlunsplit((geonode['scheme'],
                           geonode['netloc'],
@@ -87,7 +89,7 @@ def download_layer(geonode_id):
         response, content = h.request(url)
 
         try:
-            with open(layer.path(), 'wb') as f:
+            with open(layer_path(layer), 'wb') as f:
                 f.write(content)
                 layer.downloaded = True
         except EnvironmentError:

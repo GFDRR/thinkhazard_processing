@@ -11,19 +11,19 @@ import numpy as np
 from mock import Mock, patch
 from rasterio._io import RasterReader
 from affine import Affine
+
 from thinkhazard_common.models import (
     DBSession,
     AdminLevelType,
     AdministrativeDivision,
-    HazardType,
     HazardLevel,
-    )
-from . import settings
-from ..models import (
     HazardSet,
+    HazardType,
     Layer,
     Output,
     )
+
+from . import settings
 from ..processing import process
 from common import new_geonode_id
 
