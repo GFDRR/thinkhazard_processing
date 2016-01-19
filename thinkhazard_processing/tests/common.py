@@ -1,6 +1,9 @@
-from thinkhazard_common.models import DBSession
-from ..models import Layer
 from sqlalchemy import func
+
+from thinkhazard_common.models import (
+    DBSession,
+    Layer,
+    )
 
 
 def new_geonode_id():

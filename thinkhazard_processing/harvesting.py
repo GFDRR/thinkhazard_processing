@@ -9,15 +9,13 @@ from datetime import datetime
 from thinkhazard_common.models import (
     DBSession,
     HazardLevel,
-    HazardType,
-    )
-
-from . import settings
-from .models import (
     HazardSet,
+    HazardType,
     Layer,
     Output,
     )
+
+from . import settings
 
 
 logger = logging.getLogger(__name__)
@@ -103,7 +101,8 @@ def harvest_layer(object, dry_run=False):
         return False
     hazardtype = hazardtype_from_geonode(hazard_type)
     if hazardtype is None:
-        logger.warning('{} - hazard_type not supported'.format(title))
+        logger.warning('{} - hazard_type not supported: {}'
+                       .format(title, hazard_type))
         return False
 
     type_settings = settings['hazard_types'][hazardtype.mnemonic]

@@ -6,7 +6,6 @@ from thinkhazard_common.scripts.initializedb import (
     schema_exists,
     )
 
-from ..models import Base  # NOQA
 from .. import settings
 
 

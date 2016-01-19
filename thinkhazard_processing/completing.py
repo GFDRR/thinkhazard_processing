@@ -4,8 +4,6 @@ from sqlalchemy import func
 
 from thinkhazard_common.models import (
     DBSession,
-    )
-from .models import (
     HazardSet,
     Layer,
     )
