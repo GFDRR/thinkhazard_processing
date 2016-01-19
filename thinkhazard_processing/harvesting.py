@@ -158,9 +158,12 @@ def harvest_layer(object, dry_run=False):
             logger.info('{} - No corresponding hazard_level'.format(title))
             return False
 
-        hazard_unit = object['hazard_unit']
+        hazard_unit = object['hazard_unit'].lower()
         if hazard_unit == '':
             logger.info('{} -  hazard_unit is empty'.format(title))
+            return False
+        if hazard_unit not in type_settings['units']:
+            logger.info('{} -  hazard_unit is not supported'.format(title))
             return False
 
     if object['srid'] != 'EPSG:4326':

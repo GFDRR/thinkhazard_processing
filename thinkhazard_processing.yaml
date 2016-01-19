@@ -13,15 +13,13 @@ hazard_types:
       MED: 50
       LOW: [100, 1000]
     mask_return_period: 5
+    units:
+      cm: 0.01
+      dm: 0.1
+      m: 1
     thresholds:
-      global:
-        cm: 100
-        dm: 10
-        m: 1
-      local:
-        cm: 50
-        dm: 5
-        m: 0.5
+      global: 1
+      local: 0.5
 
   EQ:
     hazard_type: earthquake
@@ -29,10 +27,17 @@ hazard_types:
       HIG: [100, 250]
       MED: [475, 475]
       LOW: [2475, 2500]
-    thresholds: 98.0665
+    units:
+      "m/s2": 1
+      "cm/s2": 0.01
+    thresholds:
+      "PGA-g": 0.980665
+      "PGA-gal": 0.980665
 
   DG:
     hazard_type: drought
+    units:
+      wci: 1
     return_periods:
       HIG: 5
       MED: 50
@@ -54,6 +59,8 @@ hazard_types:
       HIG: 50
       MED: 100
       LOW: 1000
+    units:
+      "km/h": 1
     thresholds:
       "km/h": 80
 
@@ -66,6 +73,8 @@ hazard_types:
 
   CF:
     hazard_type: coastal_flood
+    units:
+      m: 1
     return_periods:
       HIG: 10
       MED: 50
