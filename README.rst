@@ -10,13 +10,41 @@ This module is intended to work together with the ThinkHazard module.
 Getting Started
 ===============
 
-Create a Python virtual environment and install the project into it::
+Install the project::
 
     $ make install
-    
-Create a database and then populate it with::
 
-    $ make initdb
+The above command actually creates a Python virtual environment and installs
+the project into it.
+
+Create a database::
+
+    $ sudo -u postgres createdb -O www-data thinkhazard_processing
+    $ sudo -u postgres psql -d thinkhazard_processing -c 'CREATE EXTENSION postgis;'
+
+If you want to use a different user or different database name, you'll have to
+provide your own configuration file. See "Use local_settings.yaml" section
+below.
+
+Create the required schema and tables and populate the enumeration tables::
+
+    $ make populatedb
+
+Note: this may take a while.
+
+If you don't want to import all the world administrative divisions, you can
+import only a subset::
+
+    $ make populatedb DATA=turkey
+    $ make populatedb DATA=indonesia
+
+You're now ready to harvest, download and process the data::
+
+    $ make harvest
+    $ make download
+    $ make complete
+    $ make process
+    $ make decision_tree
 
 For more options, see::
 
@@ -158,7 +186,7 @@ relations between administrative divisions and hazard categories.
 Run tests
 =========
 
-Prior to running the tests, one has to create a dedicated database, 
+Prior to running the tests, one has to create a dedicated database,
 eg. thinkhazard_tests, and register it with::
 
     $ echo "sqlalchemy.url: postgresql://www-data:www-data@localhost/thinkhazard_tests" > local.tests.yaml

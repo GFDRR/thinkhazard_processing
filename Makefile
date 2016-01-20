@@ -13,8 +13,9 @@ help:
 	@echo "- install                 Install thinkhazard"
 	@echo "- initdb                  Initialize database"
 	@echo "- populatedb              Populates database. Use DATA=turkey if you want to work with a sample data set"
-	@echo "- importrecommendations   Import recommendations"
-	@echo "- importfurtherresources  Import further resources"
+	@echo "- import_admindivs        Import administrative divisions. Use DATA=turkey or DATA=indonesia if you want to work with a sample data set"
+	@echo "- import_recommendations  Import recommendations"
+	@echo "- import_furtherresources Import further resources"
 	@echo "- check                   Check the code with flake8"
 	@echo "- test                    Run the unit tests"
 	@echo "- harvest                 Harvest GeoNode layers metadata"
@@ -32,21 +33,24 @@ initdb: .build/requirements.timestamp
 	.build/venv/bin/initialize_db
 
 .PHONY: populatedb
-populatedb: .build/requirements.timestamp
+populatedb: initdb import_admindivs import_recommendations import_furtherresources
+
+.PHONY: import_admindivs
+import_admindivs: .build/requirements.timestamp
 	wget -nc "http://dev.camptocamp.com/files/thinkhazard/$(DATA)/g2015_2014_0.sql.zip"
 	unzip -o g2015_2014_0.sql.zip
 	wget -nc "http://dev.camptocamp.com/files/thinkhazard/$(DATA)/g2015_2014_1.sql.zip"
 	unzip -o g2015_2014_1.sql.zip
 	wget -nc "http://dev.camptocamp.com/files/thinkhazard/$(DATA)/g2015_2014_2.sql.zip"
 	unzip -o g2015_2014_2.sql.zip
-	.build/venv/bin/populate_db
+	.build/venv/bin/import_admindivs
 	rm -rf g2015_2014_*
 
-.PHONY: importrecommendations
+.PHONY: import_recommendations
 importrecommendations: .build/requirements.timestamp
 	.build/venv/bin/import_recommendations
 
-.PHONY: importfurtherresources
+.PHONY: import_furtherresources
 importfurtherresources: .build/requirements.timestamp
 	.build/venv/bin/import_further_resources
 
