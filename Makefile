@@ -47,11 +47,11 @@ import_admindivs: .build/requirements.timestamp
 	rm -rf g2015_2014_*
 
 .PHONY: import_recommendations
-importrecommendations: .build/requirements.timestamp
+import_recommendations: .build/requirements.timestamp
 	.build/venv/bin/import_recommendations
 
 .PHONY: import_furtherresources
-importfurtherresources: .build/requirements.timestamp
+import_furtherresources: .build/requirements.timestamp
 	.build/venv/bin/import_further_resources
 
 .PHONY: harvest
