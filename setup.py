@@ -28,9 +28,9 @@ setup(name='thinkhazard_processing',
       entry_points="""\
       [console_scripts]
       initialize_db = thinkhazard_processing.scripts.initializedb:main
-      populate_db = thinkhazard_processing.scripts.populatedb:main
+      import_admindivs = thinkhazard_processing.scripts.import:import_admindivs
       import_recommendations = \
-          thinkhazard_processing.scripts.import_recommendations:main
+          thinkhazard_processing.scripts.import:import_recommendations
       import_further_resources = \
           thinkhazard_processing.scripts.import_further_resources:main
       harvest = thinkhazard_processing.scripts.harvest:main
